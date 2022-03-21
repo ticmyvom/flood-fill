@@ -1,3 +1,5 @@
+MAXCOLORVALUE = 2**16 - 1
+
 class Solution:
     def tryAccessing(self, image, r, c):
         """
@@ -9,37 +11,33 @@ class Solution:
         try:
             a = image[r][c]
         except IndexError:
-            return -1
+            return -1       # legit color value will be from 0 to 2^16 - 1
         else:
             return a
 
-    def getNearbyNodesWCoordinates(self, image, r, c):
+    def getNearbyNodesCoord(self, image, r, c):
         """
         :type image: List[List[int]]
         :type r: int
         :type c: int
-        :rtype: Dict of 0:List and 1:ListList
+        :rtype: ListList
         """
         nearbyNodes = list()
-        nodesCoord = list()
-        # possiblePlace = 
-        # return a list of all nearby 4 directional nodes; value = -1 if there is IndexError
-        if r - 1 >= 0:
-            nearbyNodes.append(self.tryAccessing(image, r-1, c))
-        else: nearbyNodes.append(-1)
-        nodesCoord.append([r-1, c]) 
-        if c - 1 >= 0:
-            nearbyNodes.append(self.tryAccessing(image, r, c-1))
-        else: nearbyNodes.append(-1) 
-        nodesCoord.append([r, c-1])
+        if r - 1 >= 0: 
+            nearby = self.tryAccessing(image, r-1, c)
+            if nearby >= 0: nearbyNodes.append([r-1, c]) 
+        if c - 1 >= 0: 
+            nearby = self.tryAccessing(image, r, c-1)
+            if nearby >= 0: nearbyNodes.append([r, c-1])
 
-        nearbyNodes.append(self.tryAccessing(image, r+1, c))
-        nodesCoord.append([r+1, c]) 
-        nearbyNodes.append(self.tryAccessing(image, r, c+1)) 
-        nodesCoord.append([r, c+1])
-        
-        return {0:nearbyNodes, 1:nodesCoord}
-    
+        if self.tryAccessing(image, r+1, c) >= 0:
+            nearbyNodes.append([r+1, c])
+        if self.tryAccessing(image, r, c+1) >= 0:
+            nearbyNodes.append([r, c+1])
+ 
+        return nearbyNodes
+
+    # done via BFS
     def floodFill(self, image, sr, sc, newColor):
         """
         :type image: List[List[int]]
@@ -48,22 +46,48 @@ class Solution:
         :type newColor: int
         :rtype: List[List[int]]
         """
-        print("Hi")
-        print(image[2][2])
+        oldColor = image[sr][sc]
+        seen = list()
+        queue1 = list()
+
+        queue1.append([sr, sc])
+        seen.append([sr, sc])
+
+        while len(queue1) != 0:
+            pixel = queue1.pop(0)
+            r, c = pixel[0], pixel[1]
+
+            # Processing step
+            if image[r][c] == oldColor:
+                image[r][c] = newColor
+
+            # Handling nearby (4-directional) nodes
+            neighbors = self.getNearbyNodesCoord(image, r, c)
+
+            if len(neighbors) != 0:
+                for coord in neighbors:
+                    coordR = coord[0]
+                    coordC = coord[1]
+
+                    # append coord if not seen and it's the old color
+                    if coord not in seen and image[coordR][coordC] == oldColor:
+                        queue1.append(coord)
+                        seen.append(coord)
+        return image
+        
 
       
 
-# listlist = [[1,1,1],[0,1,0],[1,0,155]]
-listlist = [[1,2,7],[10,111,90],[8,0,155]]
-sr = 0  
+listlist = [[1,1,1],[0,1,0],[1,0,155]]
+# listlist = [[1,2,7],[10,111,90],[8,0,155]]
+sr = 0
 sc = 2
 newColor = 2
 
 sol = Solution()
-sol.floodFill(listlist,sr,sc,newColor)
+print(sol.floodFill(listlist,sr,sc,newColor))
 
-# dict1 = sol.getNearbyNodesWCoordinates(listlist, 2, 1)
-# nearby_nodes = dict1[0]
-# nodes_coord = dict1[1]
+# nearby_nodes = sol.getNearbyNodesCoord(listlist, 2, 0)
 # print(nearby_nodes)
-# print(nodes_coord)
+
+
